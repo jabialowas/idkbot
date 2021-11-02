@@ -1,3 +1,4 @@
+const Discord = require("discord.js");
 const ytdl = require("ytdl-core");
 const ytSearch = require("ytsr");
 
@@ -5,7 +6,7 @@ const queue = new Map();
 
 module.exports = {
   name: "play",
-  aliases: ["skip", "stop"],
+  aliases: ["skip", "stop", "queue"],
   description: "Music bot",
 
   async execute(message, args, cmd, client, Discord) {
@@ -21,20 +22,18 @@ module.exports = {
     if (!permissions.has("SPEAK"))
       return message.channel.send("Nie posiadasz uprawnień");
 
-
     const serverQueue = queue.get(message.guild.id);
 
     if (cmd === "play") {
       if (!args.length)
         return message.channel.send("Musisz podać link/nazwe piosenki.");
       let song = {};
-    
-      if(ytdl.validateURL(args[0])) {
+
+      if (ytdl.validateURL(args[0])) {
         const songInfo = await ytdl.getInfo(args[0]);
-        console.log(songInfo)
         song = {
           title: songInfo.videoDetails.title,
-          artist: songInfo.videoDetails.artist,
+          artist: songInfo.videoDetails.author,
           url: songInfo.videoDetails.video_url,
           duration: songInfo.videoDetails.lengthSeconds,
         };
@@ -79,9 +78,9 @@ module.exports = {
         serverQueue.songs.push(song);
         return message.channel.send(`***${song.title}*** - dodane do kolejki`);
       }
-    } 
-    else if (cmd ==='stop') stopSong(message,serverQueue);
-    else if (cmd ==='skip') skipSong(message,serverQueue);
+    } else if (cmd === "stop") stopSong(message, serverQueue);
+    else if (cmd === "skip") skipSong(message, serverQueue);
+    else if (cmd === "queue") printQueue(message, serverQueue);
   },
 };
 
@@ -103,15 +102,37 @@ const songPlayer = async (guild, song) => {
 };
 
 const skipSong = (message, serverQueue) => {
-  if (!message.member.voice.channel) return message.channel.send('Musisz być na kanale, żeby skipować piosenki')
-  if(!serverQueue){
-    return message.channel.send('Kolejna piosenek jest pusta')
+  if (!message.member.voice.channel)
+    return message.channel.send("Musisz być na kanale, żeby skipować piosenki");
+  if (!serverQueue) {
+    return message.channel.send("Kolejna piosenek jest pusta");
   }
   serverQueue.connection.dispatcher.end();
-}
+};
 
 const stopSong = (message, serverQueue) => {
-  if (!message.member.voice.channel) return message.channel.send('Musisz być na kanale, żeby zastopować bota')
+  if (!message.member.voice.channel)
+    return message.channel.send("Musisz być na kanale, żeby zastopować bota");
   serverQueue.songs = [];
   serverQueue.connection.dispatcher.end();
-}
+};
+
+const printQueue = (message, serverQueue) => {
+  if (!message.member.voice.channel)
+    return message.channel.send("Musisz być na kanale, żeby zobaczyć kolejkę");
+    if(!serverQueue) return message.channel.send("Kolejka jest pusta.")
+  //   serverQueue.songs.forEach(function (song, index) {
+  //     message.channel.send(`${index + 1}. ${song.title}`)
+      
+  // })
+
+  
+  const newEmbed = new Discord.MessageEmbed()
+      .setColor("#424632")
+      .setTitle("Queue")
+  
+  serverQueue.songs.forEach(function (song, index) {
+    newEmbed.addFields( {name: index + 1, value: song.title})
+  });
+  message.channel.send(newEmbed);
+};
