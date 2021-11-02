@@ -16,6 +16,6 @@ module.exports = {
       )
       .setFooter("F1");
     // console.log(message.channel)
-    message.channel.send({ embeds: [newEmbed] });
+    message.channel.send(newEmbed);
   },
 };
