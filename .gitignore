@@ -1,0 +1,11 @@
+# ignore all logs
+*.log
+
+#env files
+.env
+.env.example
+.env.local
+.env.staging
+
+#node_modules
+node_modules/
