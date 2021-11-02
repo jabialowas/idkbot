@@ -18,7 +18,7 @@ const client = new Discord.Client({
   ],
 });
 
-const prefix = "!";
+const prefix = ">";
 
 client.commands = new Discord.Collection();
 const commandFiles = fs
@@ -43,7 +43,11 @@ client.on("message", (message) => {
     client.commands.get("help").execute(message, args, Discord);
   } else if (command === "dump") {
     client.commands.get("dump").execute(message, args);
-  }
+  } else if (command === "play") {
+    client.commands.get("play").execute(message, args);
+  } else if (command === "stop") {
+    client.commands.get("stop").execute(message, args);
+  } 
 });
 
 client.login(process.env.BOT_TOKEN);
