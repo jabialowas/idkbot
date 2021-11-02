@@ -16,6 +16,11 @@ const client = new Discord.Client({
     "GUILD_MEMBERS",
     "GUILD_MESSAGE_REACTIONS",
   ],
+  partials: [
+    "MESSAGE",
+    "CHANNEL",
+    "REACTION"
+  ]
 });
 
 const prefix = ">";

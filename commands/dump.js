@@ -5,15 +5,14 @@ module.exports = {
   async execute(message, args) {
     if (!args[0])
       return message.reply(
-        "please enter the amount of messages that you want to clear!"
+        "Podaj liczbę wiadomości do usunięcia."
       );
-    if (isNaN(args[0])) return message.reply("pls enter a real number!");
+    if (isNaN(args[0])) return message.reply("Podaj liczbę wiadomości do usunięcia.");
     if (args[0] > 100)
-      return message.reply("You canno't delete more than 100 messages!");
+      return message.reply("Nie możesz usunąć wiecej niz 100 linijek.");
     if (args[0] < 1)
-      return message.reply("You must delete atleast one messeage!");
+      return message.reply("Musisz usunąć przynajmniej jedną wiadmość.");
 
-    console.log(message.channel);
     await message.channel.messages
       .fetch({ limit: args[0] })
       .then((messages) => {
