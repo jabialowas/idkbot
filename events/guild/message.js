@@ -7,5 +7,5 @@ module.exports = (Discord, client, message) => {
     const cmd = args.shift().toLowerCase();
 
     const command = client.commands.get(cmd) || client.commands.find(temp => temp.aliases && temp.aliases.includes(cmd));
-    if(command) command.execute(client, message, args, Discord)
+    if(command) command.execute(message, args, cmd, client, Discord)
 }

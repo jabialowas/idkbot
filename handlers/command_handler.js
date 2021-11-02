@@ -1,7 +1,7 @@
 const fs = require("fs");
 
 module.exports = (client, Discord) => {
-  const command_files = fs
+  const commandFiles = fs
     .readdirSync("./commands/")
     .filter((file) => file.endsWith(".js"));
 

@@ -1,15 +1,17 @@
 const ytdl = require("ytdl-core");
 const ytSearch = require("ytsr");
-const fetch = (...args) =>
-  import("node-fetch").then(({ default: fetch }) => fetch(...args));
+
+const queue = new Map();
 
 module.exports = {
   name: "play",
-  description: "Music from yt",
-  async execute(message, args) {
-    const voiceChannel = message.member.voice.channel;
-    const permissions = voiceChannel.permissionsFor(message.client.user);
+  aliases: ["skip", "stop"],
+  description: "Music bot",
 
+  async execute(message, args, cmd, client, Discord) {
+    const voiceChannel = message.member.voice.channel;
+    //checking sender permissions
+    const permissions = voiceChannel.permissionsFor(message.client.user);
     if (!voiceChannel)
       return message.channel.send(
         "Dołącz do kanału głosowego przed wezwaniem bota"
@@ -18,52 +20,98 @@ module.exports = {
       return message.channel.send("Nie posiadasz uprawnień");
     if (!permissions.has("SPEAK"))
       return message.channel.send("Nie posiadasz uprawnień");
-    if (!args.length) return message.channel.send("Brak argumentu");
 
-    //Checking if argument is valid url
-    const urlValid = (str) => {
-      const regExpression =
-        /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/;
-      if (regExpression.test(str)) {
-        return true;
+
+    const serverQueue = queue.get(message.guild.id);
+
+    if (cmd === "play") {
+      if (!args.length)
+        return message.channel.send("Musisz podać link/nazwe piosenki.");
+      let song = {};
+    
+      if(ytdl.validateURL(args[0])) {
+        const songInfo = await ytdl.getInfo(args[0]);
+        console.log(songInfo)
+        song = {
+          title: songInfo.videoDetails.title,
+          artist: songInfo.videoDetails.artist,
+          url: songInfo.videoDetails.video_url,
+          duration: songInfo.videoDetails.lengthSeconds,
+        };
       } else {
-        return false;
+        const songFinder = async (query) => {
+          const songResult = await ytSearch(query);
+          return songResult.items.length > 1 ? songResult.items[0] : null;
+        };
+        const fetchedSong = await songFinder(args.join(" "));
+        if (fetchedSong) {
+          song = {
+            title: fetchedSong.title,
+            artist: fetchedSong.artist,
+            url: fetchedSong.url,
+            duration: fetchedSong.duration,
+          };
+        } else {
+          message.channel.send("Nie można znaleźć piosenki");
+        }
       }
-    };
+      if (!serverQueue) {
+        const queueConstructor = {
+          voiceChannel: voiceChannel,
+          textChannel: message.channel,
+          connection: null,
+          songs: [],
+        };
 
-    if (urlValid(args[0])) {
-      const connection = await voiceChannel.join();
-      const stream = ytdl(args[0], { filter: "audioonly" });
-      connection.play(stream, { seek: 0, volume: 1 }).on("finish", () => {
-        voiceChannel.leave();
-      });
+        queue.set(message.guild.id, queueConstructor);
+        queueConstructor.songs.push(song);
 
-      fetch(`https://noembed.com/embed?url=${args[0]}&format=json`, {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-        },
-      })
-        .then((response) => response.json())
-        .then((data) => message.reply(`🤢${data.title}`));
-
-      return;
-    }
-
-    const connection = await voiceChannel.join();
-    const videoFinder = async (query) => {
-      const videoResult = await ytSearch(query);
-      return videoResult.items.length > 1 ? videoResult.items[0] : null;
-    };
-    const video = await videoFinder(args.join(""));
-    if (video) {
-      const stream = ytdl(video.url, { filter: "audioonly" });
-      connection.play(stream, { seek: 0, volume: 1 }).on("finish", () => {
-        voiceChannel.leave();
-      });
-      await message.reply(`🤢${video.title}`);
-    } else {
-      message.channel.reply("Nie znaleziono muzyki.");
-    }
+        try {
+          const connection = await voiceChannel.join();
+          queueConstructor.connection = connection;
+          songPlayer(message.guild, queueConstructor.songs[0]);
+        } catch (err) {
+          queue.delete(message.guild.id);
+          message.channel.send("Problem z połączeniem bota");
+          throw err;
+        }
+      } else {
+        serverQueue.songs.push(song);
+        return message.channel.send(`***${song.title}*** - dodane do kolejki`);
+      }
+    } 
+    else if (cmd ==='stop') stopSong(message,serverQueue);
+    else if (cmd ==='skip') skipSong(message,serverQueue);
   },
 };
+
+const songPlayer = async (guild, song) => {
+  const songQueue = queue.get(guild.id);
+  if (!song) {
+    songQueue.voiceChannel.leave();
+    queue.delete(guild.id);
+    return;
+  }
+
+  const stream = ytdl(song.url, { filter: "audioonly" });
+  songQueue.connection
+    .play(stream, { seek: 0, volume: 0.5 })
+    .on("finish", () => {
+      songQueue.songs.shift();
+      songPlayer(guild, songQueue.songs[0]);
+    });
+};
+
+const skipSong = (message, serverQueue) => {
+  if (!message.member.voice.channel) return message.channel.send('Musisz być na kanale, żeby skipować piosenki')
+  if(!serverQueue){
+    return message.channel.send('Kolejna piosenek jest pusta')
+  }
+  serverQueue.connection.dispatcher.end();
+}
+
+const stopSong = (message, serverQueue) => {
+  if (!message.member.voice.channel) return message.channel.send('Musisz być na kanale, żeby zastopować bota')
+  serverQueue.songs = [];
+  serverQueue.connection.dispatcher.end();
+}

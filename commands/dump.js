@@ -1,8 +1,7 @@
 module.exports = {
   name: "dump",
   description: "clear messages!",
-
-  async execute(message, args) {
+  async execute(client,message,args) {
     if (!args[0])
       return message.reply(
         "Podaj liczbę wiadomości do usunięcia."
