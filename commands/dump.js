@@ -1,16 +1,16 @@
 module.exports = {
   name: "dump",
   description: "clear messages!",
-  async execute(client,message,args) {
+  async execute(message, args, cmd, client, Discord) {
     if (!args[0])
       return message.reply(
         "Podaj liczbę wiadomości do usunięcia."
       );
-    if (isNaN(args[0])) return message.reply("Podaj liczbę wiadomości do usunięcia.");
+    if (isNaN(args[0])) return message.send("Podaj liczbę wiadomości do usunięcia.");
     if (args[0] > 100)
-      return message.reply("Nie możesz usunąć wiecej niz 100 linijek.");
+      return message.send("Nie możesz usunąć wiecej niz 100 linijek.");
     if (args[0] < 1)
-      return message.reply("Musisz usunąć przynajmniej jedną wiadmość.");
+      return message.send("Musisz usunąć przynajmniej jedną wiadmość.");
 
     await message.channel.messages
       .fetch({ limit: args[0] })

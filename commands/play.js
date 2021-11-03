@@ -6,7 +6,7 @@ const queue = new Map();
 
 module.exports = {
   name: "play",
-  aliases: ["skip", "stop", "queue", "naura"],
+  aliases: ["skip", "stop", "queue", "naura", "playrandom"],
   description: "Music bot",
 
   async execute(message, args, cmd, client, Discord) {
@@ -24,7 +24,7 @@ module.exports = {
 
     const serverQueue = queue.get(message.guild.id);
 
-    if (cmd === "play") {
+    if (cmd.startsWith("play")) {
       if (!args.length)
         return message.channel.send("Musisz podać link/nazwe piosenki.");
       let song = {};
@@ -39,8 +39,12 @@ module.exports = {
         };
       } else {
         const songFinder = async (query) => {
+          console.log(query);     
           const songResult = await ytSearch(query);
-          return songResult.items.length > 1 ? songResult.items[0] : null;
+          if(cmd === 'playrandom'){
+            console.log('lol')
+            return songResult.items.length > 1 ? songResult.items[Math.floor(Math.random() * 20)] : null;   
+          } else return songResult.items.length > 1 ? songResult.items[0] : null;
         };
         const fetchedSong = await songFinder(args.join(" "));
         if (fetchedSong) {
@@ -70,6 +74,7 @@ module.exports = {
           const connection = await voiceChannel.join();
           queueConstructor.connection = connection;
           songPlayer(message.guild, queueConstructor.songs[0]);
+          message.channel.send(`Gram: ${song.title}`);
         } catch (err) {
           queue.delete(message.guild.id);
           message.channel.send("Problem z połączeniem bota");
