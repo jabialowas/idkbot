@@ -6,7 +6,7 @@ const queue = new Map();
 
 module.exports = {
   name: "play",
-  aliases: ["skip", "stop", "queue"],
+  aliases: ["skip", "stop", "queue", "naura"],
   description: "Music bot",
 
   async execute(message, args, cmd, client, Discord) {
@@ -60,6 +60,7 @@ module.exports = {
           textChannel: message.channel,
           connection: null,
           songs: [],
+          playing: true,
         };
 
         queue.set(message.guild.id, queueConstructor);
@@ -81,6 +82,7 @@ module.exports = {
     } else if (cmd === "stop") stopSong(message, serverQueue);
     else if (cmd === "skip") skipSong(message, serverQueue);
     else if (cmd === "queue") printQueue(message, serverQueue);
+    else if (cmd === "naura") deleteQueueItem(message, args, serverQueue);
   },
 };
 
@@ -92,9 +94,15 @@ const songPlayer = async (guild, song) => {
     return;
   }
 
-  const stream = ytdl(song.url, { filter: "audioonly" });
-  songQueue.connection
-    .play(stream, { seek: 0, volume: 0.5 })
+  const stream = ytdl(song.url, {
+    filter: "audioonly",
+    quality: "highest",
+    highWaterMark: 1 << 25,
+    dlChunkSize: 0,
+  });
+
+  const dispatcher = songQueue.connection
+    .play(stream, { seek: 0, volume: 1, bitrate: "auto" })
     .on("finish", () => {
       songQueue.songs.shift();
       songPlayer(guild, songQueue.songs[0]);
@@ -113,6 +121,7 @@ const skipSong = (message, serverQueue) => {
 const stopSong = (message, serverQueue) => {
   if (!message.member.voice.channel)
     return message.channel.send("Musisz być na kanale, żeby zastopować bota");
+  if (!serverQueue) return message.channel.send("Kolejka jest pusta.");
   serverQueue.songs = [];
   serverQueue.connection.dispatcher.end();
 };
@@ -120,19 +129,30 @@ const stopSong = (message, serverQueue) => {
 const printQueue = (message, serverQueue) => {
   if (!message.member.voice.channel)
     return message.channel.send("Musisz być na kanale, żeby zobaczyć kolejkę");
-    if(!serverQueue) return message.channel.send("Kolejka jest pusta.")
-  //   serverQueue.songs.forEach(function (song, index) {
-  //     message.channel.send(`${index + 1}. ${song.title}`)
-      
-  // })
-
-  
+  if (!serverQueue) return message.channel.send("Kolejka jest pusta.");
   const newEmbed = new Discord.MessageEmbed()
-      .setColor("#424632")
-      .setTitle("Queue")
-  
+    .setColor("#800080")
+    .setTitle("Queue");
   serverQueue.songs.forEach(function (song, index) {
-    newEmbed.addFields( {name: index + 1, value: song.title})
+    if (index === 0) {
+      newEmbed.addFields({ name: "Playing:", value: song.title });
+    } else {
+      newEmbed.addFields({ name: index + 1, value: song.title });
+    }
   });
   message.channel.send(newEmbed);
+};
+
+const deleteQueueItem = (message, args, serverQueue) => {
+  if (!message.member.voice.channel)
+    return message.channel.send(
+      "Musisz być na kanale, usunąć piosenkę z kolejki"
+    );
+  if (!serverQueue) return message.channel.send("Kolejka jest pusta.");
+  else if (args[0] > 1 && args[0] <= serverQueue.songs.length) {
+    message.channel.send(
+      `Została usunięta piosenka: ${serverQueue.songs[args[0] - 1].title}`
+    );
+    serverQueue.songs.splice(args[0] - 1, 1);
+  } else message.channel.send("Zły znacznik piosenki do usunięcia");
 };
