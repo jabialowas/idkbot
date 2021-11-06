@@ -4,16 +4,15 @@ const ytdl = require("ytdl-core");
 const ytSearch = require("ytsr");
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
-const playlists = JSON.parse(fs.readFileSync("./playlists/playlists.json"));
 
 module.exports = {
   name: "mixadd",
-  aliases: ["mixdelete", "mixshow", "mixcreate"],
+  aliases: ["mixdelete", "mixshow", "mixcreate", "mixlist"],
   description: "Playlist music",
 
   async execute(message, args, cmd, client, Discord) {
     const voiceChannel = message.member.voice.channel;
-    
+    const playlists = JSON.parse(fs.readFileSync("./playlists/playlists.json"));
     //checking sender permissions
     if (!voiceChannel)
       return message.channel.send(
@@ -40,7 +39,6 @@ module.exports = {
           url: songInfo.videoDetails.video_url,
         };
         if (song.title !== undefined || song.url !== undefined) {
-         
           tempPlaylists.forEach((playlistItem) => {
             if (playlistItem.name === args[0]) {
               playlistItem.items.push(song);
@@ -55,19 +53,21 @@ module.exports = {
           );
         }
       }
-    } else if (cmd === "mixcreate"){
+    } else if (cmd === "mixcreate") {
       const newMixName = args[0];
-   
+      const playlists = JSON.parse(
+        fs.readFileSync("./playlists/playlists.json")
+      );
       const tempPlaylists = playlists;
       const newMixObj = {
-        "name": newMixName,
-        "items": [{}]
-      }
+        name: newMixName,
+        items: [{}],
+      };
 
-      if (tempPlaylists.some(e => e.name === newMixName)) {
+      if (tempPlaylists.some((e) => e.name === newMixName)) {
         return message.channel.send("Podany mix już istnieje!");
       } else {
-        tempPlaylists.push(newMixObj)
+        tempPlaylists.push(newMixObj);
         console.log(tempPlaylist);
         fs.writeFile(
           "./playlists/playlists.json",
@@ -76,6 +76,21 @@ module.exports = {
             if (error) throw error;
           }
         );
+      }
+    } else if (cmd === "mixlist") {
+      const playlists = JSON.parse(
+        fs.readFileSync("./playlists/playlists.json")
+      );
+      if (playlists.some((e) => e.name === args[0])) {
+        const selectedPlaylist = playlists.find(e => e.name === args[0])
+        console.log(selectedPlaylist)
+        const newEmbed = new Discord.MessageEmbed()
+          .setColor("#424632")
+          .setTitle(selectedPlaylist.name);
+        selectedPlaylist.items.forEach((playlistItem, index) => {
+            newEmbed.addFields({ name: index + 1, value: playlistItem.title });
+        });
+        return message.channel.send(newEmbed);
       }
     }
   },
