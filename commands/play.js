@@ -1,19 +1,25 @@
 const Discord = require("discord.js");
-const fs = require('fs');
+const fs = require("fs");
 const ytdl = require("ytdl-core");
 const ytSearch = require("ytsr");
 const ytpl = require("ytpl");
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-const playlists = JSON.parse(fs.readFileSync('./playlists/playlists.json'));
-
+const fetch = (...args) =>
+  import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
 const queue = new Map();
 let playlistArr = [];
 
 module.exports = {
-  
   name: "play",
-  aliases: ["skip", "stop", "queue", "naura", "playrandom", "playnext", "mix"],
+  aliases: [
+    "skip",
+    "stop",
+    "queue",
+    "naura",
+    "playrandom",
+    "playnext",
+    "mixplay",
+  ],
   description: "Music bot",
 
   async execute(message, args, cmd, client, Discord) {
@@ -51,10 +57,10 @@ module.exports = {
               };
               playlistArr.push(song);
             });
-          }else if (!ytpl.validateID(listID)) {
+          } else if (!ytpl.validateID(listID)) {
             message.channel.send("Nie można wrzucać YouTube Mix'ow");
           }
-        }  else {
+        } else {
           const songInfo = await ytdl.getInfo(args[0]);
           song = {
             title: songInfo.videoDetails.title,
@@ -135,7 +141,7 @@ module.exports = {
     else if (cmd === "skip") skipSong(message, serverQueue);
     else if (cmd === "queue") printQueue(message, serverQueue);
     else if (cmd === "naura") deleteQueueItem(message, args, serverQueue);
-    else if (cmd === "mix") playPlaylist(message, args, serverQueue);
+    else if (cmd === "mixplay") playMix(message, args, serverQueue);
   },
 };
 
@@ -208,7 +214,7 @@ const printQueue = (message, serverQueue) => {
 const deleteQueueItem = (message, args, serverQueue) => {
   if (!message.member.voice.channel)
     return message.channel.send(
-      "Musisz być na kanale, usunąć piosenkę z kolejki"
+      "Musisz być na kanale aby usunąć piosenkę z kolejki"
     );
   if (!serverQueue) return message.channel.send("Kolejka jest pusta.");
   else if (args[0] > 1 && args[0] <= serverQueue.songs.length) {
@@ -219,13 +225,26 @@ const deleteQueueItem = (message, args, serverQueue) => {
   } else message.channel.send("Zły znacznik piosenki do usunięcia");
 };
 
-const playPlaylist = (message, args, serverQueue) => {
-  
-// let settings = { method: "Get" };
-// fetch("playlists/playlists.json", settings)
-//     .then(res => res.json())
-//     .then((json) => {
-//         console.log(JSON.stringify(json))
-//     })
-console.log(playlists.items[0]);
+const playMix = (message, args, serverQueue) => {
+  const playlists = JSON.parse(fs.readFileSync("./playlists/playlists.json"));
+  if (!message.member.voice.channel)
+    return message.channel.send("Musisz być na kanale aby włączyć playlistę.");
+  if (!args.length)
+    return message.channel.send("Musisz podać nazwę playlisty.");
+
+  if (serverQueue) {
+    serverQueue.songs = [];
+    serverQueue.connection.dispatcher.end();
+
+    const filterPlaylist = (playlist) => {
+      if (playlist.name === args[0]) {
+        return true;
+      }
+      return false;
+    };
+    const selectedPlaylist = playlists.filter(filterPlaylist);
+    selectedPlaylist[0].items.forEach((item) => {
+      serverQueue.songs.push(item);
+    });
   }
+};

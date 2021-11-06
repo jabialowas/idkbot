@@ -1,17 +1,1 @@
-{
-    "id" : "1",
-    "name": "test",
-    "items": [
-        {
-          "title": "Underoath - Cycle (Feat. Ghostemane)",
-          "url": "https://www.youtube.com/watch?v=oh5iDFhhSus",
-          "duration": "4:15"
-        },
-        {
-          "title": "Volbeat - Becoming (Official Lyric Video)",
-          "url": "https://www.youtube.com/watch?v=n3A39D_KQdw",
-          "duration": "4:14"
-        }
-      ]
-
-}
+[{"name":"test","items":[{"title":"Underoath - Cycle (Feat. Ghostemane)","url":"https://www.youtube.com/watch?v=oh5iDFhhSus","duration":"4:15"},{"title":"Volbeat - Becoming (Official Lyric Video)","url":"https://www.youtube.com/watch?v=n3A39D_KQdw","duration":"4:14"},{"title":"Arditi - Sturm Auf Die Zukunft","url":"https://www.youtube.com/watch?v=4005iCqia64"}]},{"name":"nottest2","items":[{"title":"Underoath - Cycle (Feat. Ghostemane)","url":"https://www.youtube.com/watch?v=oh5iDFhhSus","duration":"4:15"},{"title":"Volbeat - Becoming (Official Lyric Video)","url":"https://www.youtube.com/watch?v=n3A39D_KQdw","duration":"4:14"}]},{"name":"createtest","items":[{},{"title":"Volbeat - Becoming (Official Lyric Video)","url":"https://www.youtube.com/watch?v=n3A39D_KQdw"},{"title":"deadmau5 - Hyperlandia (feat. Foster the People) [Vocal Mix]","url":"https://www.youtube.com/watch?v=6p0m8iLdLaA"},{"title":"KLOUD - FOLLOW ME","url":"https://www.youtube.com/watch?v=LD_ub0d1MTE"}]}]

@@ -9,3 +9,6 @@
 
 #node_modules
 node_modules/
+
+#playlists
+playlists/playlists.json
