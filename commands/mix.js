@@ -4,7 +4,7 @@ const ytdl = require("ytdl-core");
 const ytSearch = require("ytsr");
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
-
+let playlists;
 module.exports = {
   name: "mixadd",
   aliases: ["mixdelete", "mixshow", "mixcreate", "mixlist"],
@@ -12,7 +12,21 @@ module.exports = {
 
   async execute(message, args, cmd, client, Discord) {
     const voiceChannel = message.member.voice.channel;
-    const playlists = JSON.parse(fs.readFileSync("./playlists/playlists.json"));
+    fs.stat("./playlists/playlists.json", function(err, stat) {
+    if(err == null) {
+      playlists = JSON.parse(fs.readFileSync("./playlists/playlists.json"));
+     
+    } else {
+      message.channel.send("Brak pliku z playlistami. Tworzenie pliku. Wpisz polecenie ponownie.");
+      fs.writeFile("./playlists/playlists.json", "[]", function (err) {
+        if (err) {
+          return console.log(err);
+        }
+        console.log("The file was saved!");
+      });
+    }
+});
+    
     //checking sender permissions
     if (!voiceChannel)
       return message.channel.send(
@@ -68,8 +82,7 @@ module.exports = {
         return message.channel.send("Podany mix już istnieje!");
       } else {
         tempPlaylists.push(newMixObj);
-        console.log(tempPlaylist);
-        fs.writeFile(
+        fs.writeFileSync(
           "./playlists/playlists.json",
           JSON.stringify(tempPlaylists),
           (error) => {
