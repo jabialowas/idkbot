@@ -12,3 +12,6 @@ node_modules/
 
 #playlists
 playlists/playlists.json
+
+#commands
+commands/papajowa.js

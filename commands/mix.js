@@ -7,7 +7,7 @@ const fetch = (...args) =>
 let playlists;
 module.exports = {
   name: "mixadd",
-  aliases: ["mixdelete", "mixshow", "mixcreate", "mixlist"],
+  aliases: ["mixdelete", "showmix", "mixcreate", "mixlist"],
   description: "Playlist music",
 
   async execute(message, args, cmd, client, Discord) {
@@ -38,9 +38,10 @@ module.exports = {
     if (!permissions.has("SPEAK"))
       return message.channel.send("Nie posiadasz uprawnień");
 
-    if (!args.length) return message.channel.send("Musisz podać nazwe mixu.");
+    
     if (cmd === "mixadd") {
-      const shiftedURL = args[1];
+      if (!args.length) return message.channel.send("Musisz podać nazwe mixu.");
+    const shiftedURL = args[1];
       console.log("args", args, "shifted", shiftedURL);
       let song = {};
       const tempPlaylists = playlists;
@@ -68,6 +69,7 @@ module.exports = {
         }
       }
     } else if (cmd === "mixcreate") {
+      if (!args.length) return message.channel.send("Musisz podać nazwe mixu.");
       const newMixName = args[0];
       const playlists = JSON.parse(
         fs.readFileSync("./playlists/playlists.json")
@@ -91,6 +93,7 @@ module.exports = {
         );
       }
     } else if (cmd === "mixlist") {
+      if (!args.length) return message.channel.send("Musisz podać nazwe mixu.");
       const playlists = JSON.parse(
         fs.readFileSync("./playlists/playlists.json")
       );
@@ -105,6 +108,18 @@ module.exports = {
         });
         return message.channel.send(newEmbed);
       }
-    }
+     }else if (cmd === "showmix") {
+      const playlists = JSON.parse(
+        fs.readFileSync("./playlists/playlists.json")
+      );
+        const newEmbed = new Discord.MessageEmbed()
+          .setColor("#424632")
+          .setTitle("Wszystkie mixy");
+       playlists.forEach((playlistItem, index) => {
+             newEmbed.addFields({ name: index + 1, value: playlistItem.name });
+        });
+        return message.channel.send(newEmbed);
+      }
+    
   },
 };
