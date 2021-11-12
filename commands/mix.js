@@ -93,7 +93,7 @@ module.exports = {
         );
       }
     } else if (cmd === "mixlist") {
-      if (!args.length) return message.channel.send("Musisz podać nazwe mixu.");
+      if (!args.length) return message.channel.send("Musisz podać nazwę mixu.");
       const playlists = JSON.parse(
         fs.readFileSync("./playlists/playlists.json")
       );
